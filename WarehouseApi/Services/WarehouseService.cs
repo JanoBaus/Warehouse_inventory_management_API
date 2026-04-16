@@ -1,12 +1,29 @@
 using System.Text.Json;
+using WarehouseApi.Models;
 
-public class WarehouseManagement
+public class WarehouseService: IManagementService
 {
     private const string FilePath = "Inventory.json";
+    private const string MetadataPath = "WarehouseMetadata.json";
 
-    public void ClearAll()
+    private int GetNextProductId()
     {
-        SaveToFile(new List<Product>());
+        WarehouseMetadata metadata;
+        if (File.Exists(MetadataPath))
+        {
+            string json = File.ReadAllText(MetadataPath).Trim();
+            metadata = string.IsNullOrEmpty(json) ? new WarehouseMetadata() : JsonSerializer.Deserialize<WarehouseMetadata>(json) ?? new WarehouseMetadata();
+        }
+        else
+        {
+            metadata = new WarehouseMetadata();
+        }
+
+        metadata.LastProductId++;
+        string updatedJson = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(MetadataPath, updatedJson);
+
+        return metadata.LastProductId;
     }
 
     public List<Product> GetAll()
@@ -16,7 +33,13 @@ public class WarehouseManagement
             return new List<Product>();
         }
 
-        string json = File.ReadAllText(FilePath);
+        string json = File.ReadAllText(FilePath).Trim();
+      
+        if(string.IsNullOrEmpty(json))
+        {
+            return new List<Product>();
+        }
+
         return JsonSerializer.Deserialize<List<Product>>(json) ?? new List<Product>();
     }
 
@@ -39,9 +62,9 @@ public class WarehouseManagement
         {
             throw new ArgumentNullException(nameof(product));
         }
-        if(product.Quantity < 0)
+        if(product.StockQuantity < 0)
         {
-            throw new ArgumentException("Quantity cannot be negative.");
+            throw new ArgumentException("Stock quantity cannot be negative.");
         }
         if(product.Price < 0)
         {
@@ -49,7 +72,7 @@ public class WarehouseManagement
         }
 
         var list = GetAll();
-        product.Id = list.Select(p => p.Id).DefaultIfEmpty(0).Max() + 1;
+        product.Id = GetNextProductId();
         list.Add(product);
         SaveToFile(list);
     }
@@ -60,9 +83,9 @@ public class WarehouseManagement
         {
             throw new ArgumentNullException(nameof(product));
         }
-        if(product.Quantity < 0)
+        if(product.StockQuantity < 0)
         {
-            throw new ArgumentException("Quantity cannot be negative.");
+            throw new ArgumentException("Stock quantity cannot be negative.");
         }
         if(product.Price < 0)
         {
@@ -78,23 +101,8 @@ public class WarehouseManagement
 
         existingProduct.Name = product.Name;
         existingProduct.Price = product.Price;
-        existingProduct.Quantity = product.Quantity;
+        existingProduct.StockQuantity = product.StockQuantity;
 
         SaveToFile(list);
     }
-
-    public void DeleteProduct(int id)
-    {
-        var list = GetAll();
-        var product = list.FirstOrDefault(p => p.Id == id);
-        if (product == null)
-        {
-            throw new KeyNotFoundException($"Product with ID {id} not found.");
-        }
-
-        list.Remove(product);
-        SaveToFile(list);
-    }
-    
-
 }

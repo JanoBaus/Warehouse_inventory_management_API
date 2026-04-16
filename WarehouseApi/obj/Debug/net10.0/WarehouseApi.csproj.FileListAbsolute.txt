@@ -33,3 +33,7 @@ C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\obj\Debug\net10.0\War
 C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\obj\Debug\net10.0\WarehouseApi.genruntimeconfig.cache
 C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\obj\Debug\net10.0\ref\WarehouseApi.dll
 C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\bin\Debug\net10.0\Inventory.json
+C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Siemens\Warehouse_inventory_management_API\WarehouseApi\bin\Debug\net10.0\WarehouseMetadata.json
