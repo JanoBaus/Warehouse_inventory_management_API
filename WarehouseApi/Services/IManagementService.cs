@@ -1,7 +1,12 @@
-public interface IManagementService
+using WarehouseApi.Models;
+
+namespace WarehouseApi.Services
 {
-    List<Product> GetAll();
-    Product? GetById(int id);
-    void AddProduct(Product product);
-    void UpdateProduct(int id, Product product);
+    public interface IManagementService
+    {
+        Task<List<Product>> GetAllAsync();
+        Task<Product?> GetByIdAsync(int id);
+        Task AddProductAsync(Product product);
+        Task UpdateProductAsync(int id, Product product);
+    }
 }

@@ -1,62 +1,61 @@
 using Microsoft.AspNetCore.Mvc;
+using WarehouseApi.Models;
+using WarehouseApi.Services;
 
-[ApiController]
-[Route("api/products")]
-public class WarehouseController : ControllerBase
+namespace WarehouseApi.Controllers
 {
-    private readonly IManagementService _service;
-
-    public WarehouseController(IManagementService service)
+    [ApiController]
+    [Route("api/products")]
+    public class WarehouseController : ControllerBase
     {
-        _service = service;
-    }
+        private readonly IManagementService _service;
+        private readonly ILogger<WarehouseController> _logger;
 
-    [HttpGet]
-    public ActionResult<List<Product>> GetAll()
-    {
-        return Ok(_service.GetAll());
-    }
-
-    [HttpGet("{id}")]
-    public ActionResult<Product> Get(int id)
-    {
-        var product = _service.GetById(id);
-        if (product == null)
+        public WarehouseController(IManagementService service, ILogger<WarehouseController> logger)
         {
-            return NotFound();
+            _service = service;
+            _logger = logger;
         }
-        return Ok(product);
-    }
 
-    [HttpPost]
-    public ActionResult Add(Product product)
-    {
-        try
+        [HttpGet]
+        public async Task<ActionResult<List<Product>>> GetAll()
         {
-            _service.AddProduct(product);
+            return Ok(await _service.GetAllAsync());
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Product>> Get(int id)
+        {
+            var product = await _service.GetByIdAsync(id);
+            if (product == null)
+            {
+                _logger.LogWarning("Product with ID {ProductId} was not found.", id);
+                return NotFound();
+            }
+
+            return Ok(product);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> Add(Product product)
+        {
+            await _service.AddProductAsync(product);
             return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
 
-    [HttpPut("{id}")]
-    public ActionResult Update(int id, Product product)
-    {
-        try
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Update(int id, Product product)
         {
-            _service.UpdateProduct(id, product);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
+            try
+            {
+                await _service.UpdateProductAsync(id, product);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogWarning("Cannot update product. ID {ProductId} was not found.", id);
+                return NotFound();
+            }
         }
     }
 }

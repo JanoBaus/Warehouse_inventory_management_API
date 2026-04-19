@@ -1,36 +1,42 @@
 ﻿using System.Text.Json;
+using WarehouseApi.Models;
+using WarehouseApi.Services;
+using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
-public abstract class WarehouseServiceTestBase : IDisposable
+namespace WarehouseApi.Tests
 {
-    protected readonly string TestDir;
-    protected WarehouseService CreateService() => new WarehouseService(TestDir);
-
-    protected WarehouseServiceTestBase()
+    public abstract class WarehouseServiceTestBase : IDisposable
     {
-        TestDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(TestDir);
-    }
+        protected readonly string TestDir;
+        protected WarehouseService CreateService() => new WarehouseService(TestDir);
 
-    protected void SeedInventory(List<Product> products)
-    {
-        File.WriteAllText(
-            Path.Combine(TestDir, "Inventory.json"),
-            JsonSerializer.Serialize(products)
-        );
-    }
+        protected WarehouseServiceTestBase()
+        {
+            TestDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(TestDir);
+        }
 
-    protected void SeedMetadata(int lastId)
-    {
-        File.WriteAllText(
-            Path.Combine(TestDir, "WarehouseMetadata.json"),
-            JsonSerializer.Serialize(new { LastProductId = lastId })
-        );
-    }
+        protected void SeedInventory(List<Product> products)
+        {
+            File.WriteAllText(
+                Path.Combine(TestDir, "Inventory.json"),
+                JsonSerializer.Serialize(products)
+            );
+        }
 
-    public void Dispose()
-    {
-        Directory.Delete(TestDir, recursive: true);
+        protected void SeedMetadata(int lastId)
+        {
+            File.WriteAllText(
+                Path.Combine(TestDir, "WarehouseMetadata.json"),
+                JsonSerializer.Serialize(new { LastProductId = lastId })
+            );
+        }
+
+        public void Dispose()
+        {
+            Directory.Delete(TestDir, recursive: true);
+        }
     }
 }

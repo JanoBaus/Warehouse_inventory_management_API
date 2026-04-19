@@ -1,137 +1,132 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
+using WarehouseApi.Controllers;
+using WarehouseApi.Models;
+using WarehouseApi.Services;
 using Xunit;
 
-public abstract class WarehouseControllerTestBase
+namespace WarehouseApi.Tests
 {
-    protected readonly Mock<IManagementService> MockService;
-    protected readonly WarehouseController Controller;
-
-    protected WarehouseControllerTestBase()
+    public abstract class WarehouseControllerTestBase
     {
-        MockService = new Mock<IManagementService>();
-        Controller  = new WarehouseController(MockService.Object);
-    }
-}
+        protected readonly Mock<IManagementService> MockService;
+        protected readonly Mock<ILogger<WarehouseController>> MockLogger;
+        protected readonly WarehouseController Controller;
 
-public class WarehouseController_GetAll_Tests : WarehouseControllerTestBase
-{
-    [Fact]
-    public void Returns_200_With_ProductList()
-    {
-        MockService.Setup(s => s.GetAll()).Returns(new List<Product>
+        protected WarehouseControllerTestBase()
         {
-            new Product { Id = 1, Name = "Widget", Price = 3m, StockQuantity = 7 }
-        });
-
-        var result = Controller.GetAll();
-
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Single((List<Product>)ok.Value!);
+            MockService = new Mock<IManagementService>();
+            MockLogger = new Mock<ILogger<WarehouseController>>();
+            Controller = new WarehouseController(MockService.Object, MockLogger.Object);
+        }
     }
 
-    [Fact]
-    public void Returns_200_With_EmptyList_When_NoProducts()
+    public class WarehouseController_GetAll_Tests : WarehouseControllerTestBase
     {
-        MockService.Setup(s => s.GetAll()).Returns(new List<Product>());
+        [Fact]
+        public async Task Returns_200_With_ProductList()
+        {
+            MockService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Product>
+            {
+                new Product { Id = 1, Name = "Widget", Price = 3m, StockQuantity = 7 }
+            });
 
-        var result = Controller.GetAll();
+            var result = await Controller.GetAll();
 
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Empty((List<Product>)ok.Value!);
-    }
-}
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Single((List<Product>)ok.Value!);
+        }
 
-public class WarehouseController_Get_Tests : WarehouseControllerTestBase
-{
-    [Fact]
-    public void Returns_200_With_Product_When_Found()
-    {
-        var product = new Product { Id = 1, Name = "Widget", Price = 1m, StockQuantity = 1 };
-        MockService.Setup(s => s.GetById(1)).Returns(product);
+        [Fact]
+        public async Task Returns_200_With_EmptyList_When_NoProducts()
+        {
+            MockService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Product>());
 
-        var result = Controller.Get(1);
+            var result = await Controller.GetAll();
 
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(product, ok.Value);
-    }
-
-    [Fact]
-    public void Returns_404_When_Product_NotFound()
-    {
-        MockService.Setup(s => s.GetById(99)).Returns((Product?)null);
-
-        var result = Controller.Get(99);
-
-        Assert.IsType<NotFoundResult>(result.Result);
-    }
-}
-
-public class WarehouseController_Add_Tests : WarehouseControllerTestBase
-{
-    [Fact]
-    public void Returns_201_With_CreatedProduct()
-    {
-        var product = new Product { Name = "Sprocket", Price = 2m, StockQuantity = 10 };
-        MockService.Setup(s => s.AddProduct(product))
-                   .Callback<Product>(p => p.Id = 1);
-
-        var result = Controller.Add(product);
-
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(product, created.Value);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Empty((List<Product>)ok.Value!);
+        }
     }
 
-    [Fact]
-    public void Returns_400_When_Service_Throws_ArgumentException()
+    public class WarehouseController_Get_Tests : WarehouseControllerTestBase
     {
-        var product = new Product { Name = "Bad", Price = -1m, StockQuantity = 1 };
-        MockService.Setup(s => s.AddProduct(product))
-                   .Throws(new ArgumentException("Price cannot be negative."));
+        [Fact]
+        public async Task Returns_200_With_Product_When_Found()
+        {
+            var product = new Product { Id = 1, Name = "Widget", Price = 1m, StockQuantity = 1 };
+            MockService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
 
-        var result = Controller.Add(product);
+            var result = await Controller.Get(1);
 
-        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal("Price cannot be negative.", badRequest.Value);
-    }
-}
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal(product, ok.Value);
+        }
 
-public class WarehouseController_Update_Tests : WarehouseControllerTestBase
-{
-    [Fact]
-    public void Returns_204_On_Success()
-    {
-        var product = new Product { Name = "Updated", Price = 5m, StockQuantity = 2 };
-        MockService.Setup(s => s.UpdateProduct(1, product));
+        [Fact]
+        public async Task Returns_404_When_Product_NotFound()
+        {
+            MockService.Setup(s => s.GetByIdAsync(99)).ReturnsAsync((Product?)null);
 
-        var result = Controller.Update(1, product);
+            var result = await Controller.Get(99);
 
-        Assert.IsType<NoContentResult>(result);
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
     }
 
-    [Fact]
-    public void Returns_404_When_Service_Throws_KeyNotFoundException()
+    public class WarehouseController_Add_Tests : WarehouseControllerTestBase
     {
-        var product = new Product { Name = "Ghost", Price = 1m, StockQuantity = 1 };
-        MockService.Setup(s => s.UpdateProduct(99, product))
-                   .Throws(new KeyNotFoundException());
+        [Fact]
+        public async Task Returns_201_With_CreatedProduct()
+        {
+            var product = new Product { Name = "Sprocket", Price = 2m, StockQuantity = 10 };
+            MockService.Setup(s => s.AddProductAsync(product))
+                .Callback<Product>(p => p.Id = 1)
+                .Returns(Task.CompletedTask);
 
-        var result = Controller.Update(99, product);
+            var result = await Controller.Add(product);
 
-        Assert.IsType<NotFoundResult>(result);
+            var created = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal(201, created.StatusCode);
+            Assert.Equal(product, created.Value);
+        }
     }
 
-    [Fact]
-    public void Returns_400_When_Service_Throws_ArgumentException()
+    public class WarehouseController_Update_Tests : WarehouseControllerTestBase
     {
-        var product = new Product { Name = "Bad", Price = 1m, StockQuantity = -5 };
-        MockService.Setup(s => s.UpdateProduct(1, product))
-                   .Throws(new ArgumentException("Stock quantity cannot be negative."));
+        [Fact]
+        public async Task Returns_204_On_Success()
+        {
+            var product = new Product { Id = 1, Name = "Updated", Price = 5m, StockQuantity = 2 };
+            MockService.Setup(s => s.UpdateProductAsync(1, product)).Returns(Task.CompletedTask);
 
-        var result = Controller.Update(1, product);
+            var result = await Controller.Update(1, product);
 
-        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal("Stock quantity cannot be negative.", badRequest.Value);
+            Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task Returns_404_When_Service_Throws_KeyNotFoundException()
+        {
+            var product = new Product { Id = 99, Name = "Ghost", Price = 1m, StockQuantity = 1 };
+            MockService.Setup(s => s.UpdateProductAsync(99, product))
+                .ThrowsAsync(new KeyNotFoundException());
+
+            var result = await Controller.Update(99, product);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Returns_400_When_RouteAndBodyId_DoNotMatch()
+        {
+            var product = new Product { Id = 2, Name = "Mismatch", Price = 1m, StockQuantity = 1 };
+
+            var result = await Controller.Update(1, product);
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Product ID in URL must match product ID in request body.", badRequest.Value);
+        }
     }
 }
