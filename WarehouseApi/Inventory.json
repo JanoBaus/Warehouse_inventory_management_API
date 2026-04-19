@@ -1,9 +1,9 @@
 [
   {
     "Id": 1,
-    "Name": "Chleba",
-    "Price": 9,
-    "StockQuantity": 90
+    "Name": "Meso",
+    "Price": 0,
+    "StockQuantity": 0
   },
   {
     "Id": 2,
@@ -82,5 +82,11 @@
     "Name": "Chleba",
     "Price": 9,
     "StockQuantity": 90
+  },
+  {
+    "Id": 16,
+    "Name": "Rozok",
+    "Price": 0,
+    "StockQuantity": 0
   }
 ]

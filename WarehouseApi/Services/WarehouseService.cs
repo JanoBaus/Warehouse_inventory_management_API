@@ -1,17 +1,25 @@
 using System.Text.Json;
 using WarehouseApi.Models;
 
-public class WarehouseService: IManagementService
+public class WarehouseService : IManagementService
 {
-    private const string FilePath = "Inventory.json";
-    private const string MetadataPath = "WarehouseMetadata.json";
+    private readonly string _filePath;
+    private readonly string _metadataPath;
+
+    public WarehouseService() : this(Directory.GetCurrentDirectory()) { }
+
+    public WarehouseService(string directory)
+    {
+        _filePath = Path.Combine(directory, "Inventory.json");
+        _metadataPath = Path.Combine(directory, "WarehouseMetadata.json");
+    }
 
     private int GetNextProductId()
     {
         WarehouseMetadata metadata;
-        if (File.Exists(MetadataPath))
+        if (File.Exists(_metadataPath))
         {
-            string json = File.ReadAllText(MetadataPath).Trim();
+            string json = File.ReadAllText(_metadataPath).Trim();
             metadata = string.IsNullOrEmpty(json) ? new WarehouseMetadata() : JsonSerializer.Deserialize<WarehouseMetadata>(json) ?? new WarehouseMetadata();
         }
         else
@@ -21,21 +29,21 @@ public class WarehouseService: IManagementService
 
         metadata.LastProductId++;
         string updatedJson = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(MetadataPath, updatedJson);
+        File.WriteAllText(_metadataPath, updatedJson);
 
         return metadata.LastProductId;
     }
 
     public List<Product> GetAll()
     {
-        if(!File.Exists(FilePath))
+        if (!File.Exists(_filePath))
         {
             return new List<Product>();
         }
 
-        string json = File.ReadAllText(FilePath).Trim();
-      
-        if(string.IsNullOrEmpty(json))
+        string json = File.ReadAllText(_filePath).Trim();
+
+        if (string.IsNullOrEmpty(json))
         {
             return new List<Product>();
         }
@@ -53,7 +61,7 @@ public class WarehouseService: IManagementService
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         string json = JsonSerializer.Serialize(products, options);
-        File.WriteAllText(FilePath, json);
+        File.WriteAllText(_filePath, json);
     }
 
     public void AddProduct(Product product)
@@ -62,11 +70,11 @@ public class WarehouseService: IManagementService
         {
             throw new ArgumentNullException(nameof(product));
         }
-        if(product.StockQuantity < 0)
+        if (product.StockQuantity < 0)
         {
             throw new ArgumentException("Stock quantity cannot be negative.");
         }
-        if(product.Price < 0)
+        if (product.Price < 0)
         {
             throw new ArgumentException("Price cannot be negative.");
         }
@@ -83,11 +91,11 @@ public class WarehouseService: IManagementService
         {
             throw new ArgumentNullException(nameof(product));
         }
-        if(product.StockQuantity < 0)
+        if (product.StockQuantity < 0)
         {
             throw new ArgumentException("Stock quantity cannot be negative.");
         }
-        if(product.Price < 0)
+        if (product.Price < 0)
         {
             throw new ArgumentException("Price cannot be negative.");
         }
