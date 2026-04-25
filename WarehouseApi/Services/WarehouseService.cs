@@ -121,6 +121,8 @@ namespace WarehouseApi.Services
                 throw new ArgumentNullException(nameof(product));
             }
 
+            ValidateProduct(product);
+
             await _inventoryLock.WaitAsync();
             try
             {
@@ -143,6 +145,8 @@ namespace WarehouseApi.Services
                 throw new ArgumentNullException(nameof(product));
             }
 
+            ValidateProduct(product);
+
             await _inventoryLock.WaitAsync();
             try
             {
@@ -164,5 +168,19 @@ namespace WarehouseApi.Services
                 _inventoryLock.Release();
             }
         }
+
+        public void ValidateProduct(Product product)
+        {
+            if (product.Price < 0)
+            {
+                throw new ArgumentException("Product price cannot be negative.");
+            }
+
+            if (product.StockQuantity < 0)
+            {
+                throw new ArgumentException("Stock quantity cannot be negative.");
+            }
+        }
+
     }
 }

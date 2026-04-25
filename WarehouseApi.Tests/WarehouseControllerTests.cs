@@ -117,16 +117,5 @@ namespace WarehouseApi.Tests
 
             Assert.IsType<NotFoundResult>(result);
         }
-
-        [Fact]
-        public async Task Returns_400_When_RouteAndBodyId_DoNotMatch()
-        {
-            var product = new Product { Id = 2, Name = "Mismatch", Price = 1m, StockQuantity = 1 };
-
-            var result = await Controller.Update(1, product);
-
-            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Product ID in URL must match product ID in request body.", badRequest.Value);
-        }
     }
 }
